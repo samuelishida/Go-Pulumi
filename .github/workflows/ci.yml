@@ -7,36 +7,38 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   test-build-push:
     runs-on: ubuntu-latest
     env:
-      IMAGE: ghcr.io/${{ github.repository }}/echo-service:${{ github.sha }}
+      REPO_LC: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Lowercase repo name
+        run: echo "REPO_LC=${REPO_LC,,}" >> "$GITHUB_ENV"
+
       - name: Run CI (test, build)
         env:
-          IMAGE: ${{ env.IMAGE }}
           SKIP_PUSH: ${{ github.event_name == 'pull_request' && '1' || '0' }}
         run: |
           bash scripts/bootstrap.sh
-          SKIP_PUSH=${SKIP_PUSH} bash scripts/ci.sh
+          SKIP_PUSH=${SKIP_PUSH} IMAGE="ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}" bash scripts/ci.sh
 
       - name: Publish to GHCR
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          IMAGE="ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}"
           echo "${GH_TOKEN}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker push "$IMAGE"
-          docker tag "$IMAGE" "ghcr.io/${{ github.repository }}/echo-service:main"
-          docker push "ghcr.io/${{ github.repository }}/echo-service:main"
+          docker tag "$IMAGE" "ghcr.io/${REPO_LC}/echo-service:main"
+          docker push "ghcr.io/${REPO_LC}/echo-service:main"
 
       - name: Job summary
-        if: always()
         run: |
           echo "### CI result" >> "$GITHUB_STEP_SUMMARY"
-          echo "- image: \`${IMAGE}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- image: \`ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- pushed: ${{ github.event_name == 'push' }}" >> "$GITHUB_STEP_SUMMARY"

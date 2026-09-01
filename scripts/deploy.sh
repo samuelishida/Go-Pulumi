@@ -15,6 +15,8 @@ command -v pulumi >/dev/null || (echo "run scripts/bootstrap.sh first" && exit 1
 
 cd infra
 
+pulumi stack select "$STACK" 2>/dev/null || pulumi stack init "$STACK"
+
 echo "pulumi preview $STACK"
 pulumi preview --stack "$STACK" --diff --refresh
 

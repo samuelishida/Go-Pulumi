@@ -15,7 +15,7 @@ NAME="${CLUSTER_NAME:-pulumi-dev-cp}"
 
 if command -v pulumi >/dev/null && [ -d infra ]; then
   echo "destroy stack $STACK"
-  (cd infra && pulumi destroy --stack "$STACK" --yes)
+  (cd infra && PULUMI_K8S_DELETE_UNREACHABLE=true pulumi destroy --stack "$STACK" --yes) || true
 fi
 
 if kind get clusters 2>/dev/null | grep -qx "$NAME"; then
