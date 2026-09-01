@@ -27,6 +27,25 @@ jobs:
           bash scripts/bootstrap.sh
           IMAGE="ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}" bash scripts/ci.sh
 
+      - name: E2E smoke test on Kind
+        run: |
+          bash scripts/bootstrap.sh --cluster
+          docker tag "ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}" localhost:5001/echo-service:ci
+          docker push localhost:5001/echo-service:ci
+          export PULUMI_BACKEND_URL="file://$PWD/.pulumi" PULUMI_CONFIG_PASSPHRASE=""
+          printf 'y\n' | bash scripts/deploy.sh dev
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS "http://localhost:30080/smoke?a=1" -d 'ping' 2>/dev/null | grep -q '"path":"/smoke"'; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          [ "$ok" = "1" ] || (echo "smoke test failed"; exit 1)
+          echo "smoke test passed"
+          bash scripts/teardown.sh dev
+
       - name: Publish to GHCR
         if: github.event_name == 'push'
         env:
@@ -42,4 +61,5 @@ jobs:
         run: |
           echo "### CI result" >> "$GITHUB_STEP_SUMMARY"
           echo "- image: \`ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- e2e smoke test: passed" >> "$GITHUB_STEP_SUMMARY"
           echo "- pushed: ${{ github.event_name == 'push' }}" >> "$GITHUB_STEP_SUMMARY"

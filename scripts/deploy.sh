@@ -11,6 +11,9 @@ fi
 STACK="${1:-dev}"
 
 [ -n "${PULUMI_BACKEND_URL:-}" ] || (echo "set PULUMI_BACKEND_URL" && exit 1)
+case "$PULUMI_BACKEND_URL" in
+  file://*) mkdir -p "${PULUMI_BACKEND_URL#file://}" ;;
+esac
 command -v pulumi >/dev/null || (echo "run scripts/bootstrap.sh first" && exit 1)
 
 cd infra
