@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-build-push:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}/echo-service:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run CI (test, build)
+        env:
+          IMAGE: ${{ env.IMAGE }}
+          SKIP_PUSH: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+        run: |
+          bash scripts/bootstrap.sh
+          SKIP_PUSH=${SKIP_PUSH} bash scripts/ci.sh
+
+      - name: Publish to GHCR
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${GH_TOKEN}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push "$IMAGE"
+          docker tag "$IMAGE" "ghcr.io/${{ github.repository }}/echo-service:main"
+          docker push "ghcr.io/${{ github.repository }}/echo-service:main"
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo "### CI result" >> "$GITHUB_STEP_SUMMARY"
+          echo "- image: \`${IMAGE}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- pushed: ${{ github.event_name == 'push' }}" >> "$GITHUB_STEP_SUMMARY"

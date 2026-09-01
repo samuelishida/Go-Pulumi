@@ -1,0 +1,13 @@
+name: echo
+description: Deploys the echo web service to a Kubernetes cluster (local Kind by default).
+runtime: go
+main: infra
+
+config:
+  echo:replicas:
+    type: integer
+    default: 2
+  echo:nodePort:
+    type: integer
+    default: 30080
+    description: NodePort exposed by the Kubernetes Service. Must match kind cluster extraPortMappings.

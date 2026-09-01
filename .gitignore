@@ -1,0 +1,16 @@
+# Local artifacts
+.tools/
+.pulumi/
+*.tar.gz
+
+# Go
+app/echo
+infra/infra
+infra/echo
+
+# Editor
+.idea/
+.vscode/
+
+# OS
+.DS_Store

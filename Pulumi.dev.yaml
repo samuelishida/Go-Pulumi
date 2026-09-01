@@ -1,0 +1,5 @@
+config:
+  echo:replicas: "2"
+  echo:image: localhost:5001/echo-service:ci
+  echo:nodePort: "30080"
+encryptionsalt: v1:3+B6ZTSPt6A=:v1:z+B66hSkDtaEPHqh:2AYTDfVIRJA9OxwuSW3hTAZ1kEYlmg==
