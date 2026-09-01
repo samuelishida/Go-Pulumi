@@ -22,10 +22,10 @@ jobs:
 
       - name: Run CI (test, build)
         env:
-          SKIP_PUSH: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+          SKIP_PUSH: 1
         run: |
           bash scripts/bootstrap.sh
-          SKIP_PUSH=${SKIP_PUSH} IMAGE="ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}" bash scripts/ci.sh
+          IMAGE="ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}" bash scripts/ci.sh
 
       - name: Publish to GHCR
         if: github.event_name == 'push'
@@ -34,6 +34,7 @@ jobs:
         run: |
           IMAGE="ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}"
           echo "${GH_TOKEN}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push "$IMAGE"
           docker tag "$IMAGE" "ghcr.io/${REPO_LC}/echo-service:main"
           docker push "ghcr.io/${REPO_LC}/echo-service:main"
 
