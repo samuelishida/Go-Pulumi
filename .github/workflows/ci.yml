@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
 
 permissions:
@@ -35,8 +35,8 @@ jobs:
           IMAGE="ghcr.io/${REPO_LC}/echo-service:${GITHUB_SHA}"
           echo "${GH_TOKEN}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           docker push "$IMAGE"
-          docker tag "$IMAGE" "ghcr.io/${REPO_LC}/echo-service:main"
-          docker push "ghcr.io/${REPO_LC}/echo-service:main"
+          docker tag "$IMAGE" "ghcr.io/${REPO_LC}/echo-service:${GITHUB_REF_NAME}"
+          docker push "ghcr.io/${REPO_LC}/echo-service:${GITHUB_REF_NAME}"
 
       - name: Job summary
         run: |

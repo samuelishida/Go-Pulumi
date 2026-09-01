@@ -84,14 +84,30 @@ scripts/teardown.sh
 
 ## Configuration
 
-`Pulumi.yaml` declares typed defaults. `Pulumi.dev.yaml` overrides:
+`Pulumi.yaml` declares typed defaults. Stack configs override:
 
 ```yaml
-config:
-  echo:replicas: "2"
-  echo:image: localhost:5001/echo-service:ci
-  echo:nodePort: "30080"
+# Pulumi.dev.yaml — dev stack
+echo:replicas: "2"
+echo:image: localhost:5001/echo-service:ci
+echo:nodePort: "30080"
+
+# Pulumi.prod.yaml — prod stack
+echo:replicas: "3"
+echo:image: localhost:5001/echo-service:main
+echo:nodePort: "30080"
 ```
+
+## Branches and environments
+
+| Branch | Stack | Image tag | Replicas |
+|--------|-------|-----------|----------|
+| `dev`  | `dev`  | `echo-service:dev`  | 2 |
+| `main` | `prod` | `echo-service:main` | 3 |
+
+Both stacks deploy to the same local cluster, so deploy one at a time (or
+recreate the cluster per stack). CI builds and publishes `echo-service:<branch>`
+to GHCR on every push to either branch.
 
 Changing `nodePort` also requires the same port in `kind-config.yaml`
 `extraPortMappings`, and a fresh cluster because port mappings are fixed at
@@ -105,7 +121,8 @@ base image.
 ## CI
 
 `.github/workflows/ci.yml` runs tests and builds the image on every push and
-pull request. On pushes to `main` it also publishes to GHCR.
+pull request. On pushes to `main` or `dev` it also publishes to GHCR, tagged
+with the branch name.
 
 ## Tear down
 
