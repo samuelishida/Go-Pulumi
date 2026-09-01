@@ -15,7 +15,7 @@ jobs:
     env:
       REPO_LC: ${{ github.repository }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Lowercase repo name
         run: echo "REPO_LC=${REPO_LC,,}" >> "$GITHUB_ENV"
